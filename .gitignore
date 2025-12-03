@@ -46,3 +46,5 @@ dataform/
 # ======================
 .DS_Store
 Thumbs.db
+
+workflow_settings.yaml
