@@ -1,0 +1,14 @@
+config {
+  type: "table",  
+  schema: "modeling",
+  name: "dim_players"
+}
+
+SELECT
+    id AS id_player,
+    full_name,
+    first_name,
+    last_name,
+    is_active
+FROM 
+    ${ref("stg_players")}

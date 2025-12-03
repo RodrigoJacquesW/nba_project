@@ -1,0 +1,16 @@
+config {
+  type: "table",  
+  schema: "modeling",
+  name: "dim_teams"
+}
+
+SELECT
+    id AS id_team,
+    full_name,
+    abbreviation,
+    nickname AS team_name,
+    city,
+    state AS team_state,
+    year_founded
+FROM 
+    ${ref("stg_teams")}

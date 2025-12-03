@@ -1,0 +1,9 @@
+config {
+  type: "table",  
+  schema: "modeling",
+  name: "stg_teams"
+}
+
+select
+    *
+from ${ref("teams")}

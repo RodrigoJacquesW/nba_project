@@ -1,0 +1,36 @@
+config {
+  type: "table",  
+  schema: "modeling",
+  name: "fct_teamlog"
+}
+
+SELECT
+    SEASON_ID AS id_season,
+    TEAM_ID AS id_team,
+    TEAM_ABBREVIATION AS team_abbreviation,
+    TEAM_NAME AS team_name,
+    GAME_ID AS id_game,
+    MATCHUP AS matchup,
+    WL AS win_or_loss,
+    MIN AS player_minutes,
+    FGM AS field_goals_made,
+    FGA AS field_goals_tried,
+    FG_PCT  AS field_goal_percentage,
+    FG3M AS three_point_made,
+    FG3A AS three_point_tried,
+    FG3_PCT AS three_point_percentage,
+    FTM AS free_throws_made,
+    FTA AS free_throws_tried,
+    FT_PCT AS free_throws_poercentage,
+    OREB AS offensive_rebounds,
+    DREB AS defensive_rebounds,
+    REB AS total_rebounds,
+    AST AS assist,
+    STL AS steals,
+    BLK AS blocks,
+    TOV AS turnovers,
+    PF AS personal_fouls,
+    PTS AS points,
+    PLUS_MINUS AS plus_minus
+FROM 
+    ${ref("stg_teamlog")}

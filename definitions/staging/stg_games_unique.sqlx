@@ -1,0 +1,8 @@
+config {
+  type: "table",  
+  schema: "modeling",
+  name: "stg_games_unique"
+}
+select
+    *
+from ${ref("games_unique")}
