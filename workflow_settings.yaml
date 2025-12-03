@@ -1,0 +1,5 @@
+dataformCoreVersion: 3.0.38
+defaultProject: nba-project-478023
+defaultLocation: US
+defaultDataset: dataform
+defaultAssertionDataset: dataform_assertions

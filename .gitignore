@@ -1,0 +1,51 @@
+# ======================
+# Ambientes e caches
+# ======================
+# virtualenvs
+.venv/
+venv/
+pyvenv.cfg
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# ======================
+# Dados pesados / outputs
+# ======================
+data/
+headshots/
+images/
+*.sqlite
+*.db
+
+# ======================
+# Credenciais & secrets
+# ======================
+# Ignore qualquer JSON de credenciais por segurança (ajuste abaixo se necessário)
+*.json
+*.env
+.df-credentials.json
+df-credentials.json
+
+# ======================
+# Dataform / configs locais
+# ======================
+workflowsettings
+dataform/
+
+# ======================
+# Arquivos temporários/OS
+# ======================
+.DS_Store
+Thumbs.db
