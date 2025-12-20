@@ -4,12 +4,16 @@ from get_gamelogs import full_get_gamelog
 from get_players import full_get_player
 from get_teamlog import full_team_gamelog
 from get_teams import full_get_teams
+from get_playersindex import full_get_player_index
 from get_team_headshot import download_all_team_logos
 from get_player_headshot import download_all_headshots
 
 def main():
     print("Baixando players...")
     full_get_player()
+
+    print("Baixando players index...")
+    full_get_player_index()
 
     print("Baixando teams...")
     full_get_teams()

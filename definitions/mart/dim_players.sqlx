@@ -5,10 +5,23 @@ config {
 }
 
 SELECT
-    id AS id_player,
-    full_name,
-    first_name,
-    last_name,
-    is_active
+    p.id AS id_player,
+    p.full_name,
+    p.first_name,
+    p.last_name,
+    p.is_active,
+    pi.TEAM_ID AS id_team,
+    pi.POSITION AS position,
+    pi.HEIGHT AS height,
+    pi.WEIGHT AS weight,
+    pi.COUNTRY AS country,
+    pi.COLLEGE AS college,
+    pi.DRAFT_YEAR AS draft_year
 FROM 
-    ${ref("stg_players")}
+    ${ref("stg_players")} AS p
+LEFT JOIN 
+    ${ref("stg_players_index")} AS pi
+ON
+    p.id = pi.PERSON_ID
+WHERE is_active IS TRUE
+  

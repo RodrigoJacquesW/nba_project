@@ -4,33 +4,46 @@ config {
   name: "fct_teamlog"
 }
 
+WITH join_date AS (
+
+  SELECT
+      tl.SEASON_ID AS id_season,
+      tl.TEAM_ID AS id_team,
+      tl.TEAM_ABBREVIATION AS team_abbreviation,
+      tl.TEAM_NAME AS team_name,
+      tl.GAME_ID AS id_game,
+      tl.MATCHUP AS matchup,
+      tl.WL AS win_or_loss,
+      tl.MIN AS team_minutes,
+      tl.FGM AS field_goals_made,
+      tl.FGA AS field_goals_tried,
+      tl.FG_PCT  AS field_goal_percentage,
+      tl.FG3M AS three_point_made,
+      tl.FG3A AS three_point_tried,
+      tl.FG3_PCT AS three_point_percentage,
+      tl.FTM AS free_throws_made,
+      tl.FTA AS free_throws_tried,
+      tl.FT_PCT AS free_throws_poercentage,
+      tl.OREB AS offensive_rebounds,
+      tl.DREB AS defensive_rebounds,
+      tl.REB AS total_rebounds,
+      tl.AST AS assist,
+      tl.STL AS steals,
+      tl.BLK AS blocks,
+      tl.TOV AS turnovers,
+      tl.PF AS personal_fouls,
+      tl.PTS AS points,
+      tl.PLUS_MINUS AS plus_minus,
+      DATE(gu.game_date) AS game_date
+  FROM
+    ${ref("stg_teamlog")} AS tl
+  LEFT JOIN  
+    ${ref("stg_games_unique")} AS gu
+  ON tl.GAME_ID = gu.GAME_ID
+  
+)
+
 SELECT
-    SEASON_ID AS id_season,
-    TEAM_ID AS id_team,
-    TEAM_ABBREVIATION AS team_abbreviation,
-    TEAM_NAME AS team_name,
-    GAME_ID AS id_game,
-    MATCHUP AS matchup,
-    WL AS win_or_loss,
-    MIN AS player_minutes,
-    FGM AS field_goals_made,
-    FGA AS field_goals_tried,
-    FG_PCT  AS field_goal_percentage,
-    FG3M AS three_point_made,
-    FG3A AS three_point_tried,
-    FG3_PCT AS three_point_percentage,
-    FTM AS free_throws_made,
-    FTA AS free_throws_tried,
-    FT_PCT AS free_throws_poercentage,
-    OREB AS offensive_rebounds,
-    DREB AS defensive_rebounds,
-    REB AS total_rebounds,
-    AST AS assist,
-    STL AS steals,
-    BLK AS blocks,
-    TOV AS turnovers,
-    PF AS personal_fouls,
-    PTS AS points,
-    PLUS_MINUS AS plus_minus
-FROM 
-    ${ref("stg_teamlog")}
+  *
+FROM
+  join_date
