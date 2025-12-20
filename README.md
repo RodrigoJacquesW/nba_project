@@ -28,7 +28,8 @@ Data Engineering
 - Git / GitHub  
 
 BI & Analytics  
-- Power BI  
+- Power BI
+- Figma
 - Star schema modeling  
 - Advanced DAX (benchmarks, league averages, dynamic targets)
 
@@ -146,3 +147,4 @@ Data Engineering · Analytics Engineering · Business Intelligence
 ## Final Notes
 
 This project demonstrates more than dashboard creation. It showcases solid data modeling, architectural decision-making, analytical thinking, scalability awareness, and a production-ready mindset.
+
