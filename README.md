@@ -23,9 +23,6 @@ Dataform (Transformation & Modeling)
 ↓
 Power BI (Analytics & Visualization)
 
-yaml
-Copiar código
-
 ---
 
 ## 🛠️ Tech Stack
@@ -62,6 +59,9 @@ from nba_api.stats.endpoints import PlayerIndex
 from nba_api.stats.static import teams
 Additionally, official headshots for players and teams are downloaded and stored to enhance dashboard visuals.
 
+```
+
+
 ⚙️ Local Pipeline Orchestration
 A centralized main() function orchestrates the entire pipeline execution:
 
@@ -77,12 +77,11 @@ def main():
     download_all_headshots()
     download_all_team_logos()
     subprocess.run(["dataform", "run"], check=True)
+
 This approach provides
-One-command end-to-end execution
-
-Reproducibility
-
-Easy testing and iteration
+-`One-command end-to-end execution`
+-`Reproducibility`
+-`Easy testing and iteration`
 
 🧱 Data Modeling (Transform)
 Transformations are handled using Dataform, organized into layered models:
@@ -178,3 +177,4 @@ Copiar código
 👤 Author
 Developed by Rodrigo Wolff
 Focused on Data Engineering, Analytics Engineering, and Business Intelligence.
+
