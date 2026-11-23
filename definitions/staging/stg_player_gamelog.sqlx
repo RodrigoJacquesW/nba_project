@@ -1,0 +1,41 @@
+config {
+  type: "view",
+  schema: "nba_staging",
+  description: "Player box scores, one row per player per game, with typed and renamed columns.",
+  assertions: {
+    uniqueKey: ["id_player", "id_game"],
+    nonNull: ["id_player", "id_game", "id_team", "game_date"]
+  }
+}
+
+select
+    cast(SEASON_ID as string)   as id_season,
+    PLAYER_ID                   as id_player,
+    PLAYER_NAME                 as player_name,
+    TEAM_ID                     as id_team,
+    TEAM_ABBREVIATION           as team_abbreviation,
+    cast(GAME_ID as string)     as id_game,
+    cast(GAME_DATE as date)     as game_date,
+    MATCHUP                     as matchup,
+    WL                          as win_or_loss,
+    MIN                         as minutes,
+    FGM                         as field_goals_made,
+    FGA                         as field_goals_tried,
+    FG_PCT                      as field_goal_percentage,
+    FG3M                        as three_point_made,
+    FG3A                        as three_point_tried,
+    FG3_PCT                     as three_point_percentage,
+    FTM                         as free_throws_made,
+    FTA                         as free_throws_tried,
+    FT_PCT                      as free_throws_percentage,
+    OREB                        as offensive_rebounds,
+    DREB                        as defensive_rebounds,
+    REB                         as total_rebounds,
+    AST                         as assist,
+    STL                         as steals,
+    BLK                         as blocks,
+    TOV                         as turnovers,
+    PF                          as personal_fouls,
+    PTS                         as points,
+    PLUS_MINUS                  as plus_minus
+from ${ref("player_gamelog")}

@@ -1,5 +1,0 @@
-config {
-  type: "declaration",
-  schema: "nba_raw",
-  name: "games_unique"
-}

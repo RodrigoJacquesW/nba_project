@@ -1,0 +1,13 @@
+config {
+  type: "assertion",
+  description: "Every game must have exactly two team rows and one winner. Home rows: 1, or 0 at neutral sites."
+}
+
+select
+    id_game,
+    count(*)                        as team_rows,
+    countif(is_home)                as home_rows,
+    countif(win_or_loss = 'W')      as winners
+from ${ref("fct_teamlog")}
+group by id_game
+having team_rows != 2 or home_rows > 1 or winners != 1

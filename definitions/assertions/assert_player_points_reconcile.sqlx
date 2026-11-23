@@ -1,0 +1,20 @@
+config {
+  type: "assertion",
+  description: "Reconciliation between the two sources: the sum of player points in a game must equal the team's points."
+}
+
+with player_totals as (
+    select id_game, id_team, sum(points) as player_points
+    from ${ref("fct_gamelog")}
+    group by id_game, id_team
+)
+
+select
+    t.id_game,
+    t.id_team,
+    t.points            as team_points,
+    p.player_points
+from ${ref("fct_teamlog")} as t
+left join player_totals as p
+    using (id_game, id_team)
+where p.player_points is null or p.player_points != t.points

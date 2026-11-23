@@ -1,0 +1,42 @@
+config {
+  type: "table",
+  schema: "modeling",
+  description: "One row per player who played at least one game in the season. id_team is the team of the player's last game (handles mid-season trades).",
+  assertions: {
+    uniqueKey: ["id_player"],
+    nonNull: ["id_player", "full_name", "id_team"]
+  }
+}
+
+with season_players as (
+    select
+        id_player,
+        any_value(player_name)                                           as player_name,
+        array_agg(id_team order by game_date desc limit 1)[offset(0)]    as id_team,
+        count(*)                                                         as games_played
+    from ${ref("stg_player_gamelog")}
+    group by id_player
+)
+
+select
+    sp.id_player,
+    coalesce(pi.full_name, sp.player_name)  as full_name,
+    pi.first_name,
+    pi.last_name,
+    -- Kept for the Power BI report, which filters on it. Every player in this table
+    -- played in the season, so the flag is always true.
+    true                                    as is_active,
+    sp.id_team,
+    sp.games_played,
+    pi.position,
+    pi.height,
+    pi.height_cm,
+    pi.weight,
+    pi.country,
+    pi.college,
+    pi.draft_year,
+    pi.draft_round,
+    pi.draft_number
+from season_players as sp
+left join ${ref("stg_players_index")} as pi
+    on sp.id_player = pi.id_player

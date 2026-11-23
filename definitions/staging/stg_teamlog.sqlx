@@ -1,9 +1,0 @@
-config {
-  type: "table",  
-  schema: "modeling",
-  name: "stg_teamlog"
-}
-
-select
-    *
-from ${ref("teamlog")}

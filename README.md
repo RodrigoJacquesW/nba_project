@@ -1,150 +1,125 @@
-# 🏀 NBA Analytics Data Pipeline & BI Dashboard
+# 🏀 NBA Analytics Pipeline
 
-End-to-end Data Engineering and Analytics project built using official NBA data, covering the full data lifecycle from raw extraction to business-ready insights.
+End-to-end analytics project on official NBA data: a Python pipeline extracts the season from the NBA Stats API, loads it into **BigQuery**, models it with **Dataform** (staging → marts, with data-quality tests) and feeds a **Power BI** dashboard comparing players and teams against the league.
 
-Extraction → Storage → Modeling → Visualization
+![Players dashboard](docs/img/dashboard_players.jpg)
 
-The goal of this project is to create a reliable analytical foundation to analyze players, teams, and season performance, delivering interactive and insight-driven dashboards in Power BI.
+## Architecture
 
-## Architecture Overview
+```mermaid
+flowchart LR
+    A[NBA Stats API<br/>nba_api] -->|Python| B[(BigQuery<br/>nba_raw)]
+    C[NBA CDN<br/>headshots & logos] -->|Python| D[data/headshots]
+    B -->|Dataform| E[(nba_staging<br/>views)]
+    E -->|Dataform| F[(modeling<br/>dims & facts)]
+    F --> G[Power BI]
+    D --> G
+```
 
-NBA Stats API  
-↓  
-Python (Extraction)  
-↓  
-Google BigQuery (Storage)  
-↓  
-Dataform (Transformation & Modeling)  
-↓  
-Power BI (Analytics & Visualization)
+One command runs everything: `python main.py` extracts, loads, runs the Dataform models and their tests.
 
-## Tech Stack
+| Layer | Dataset | What happens there |
+|---|---|---|
+| Raw | `nba_raw` | API responses as-is, plus an `_ingested_at` column. Full refresh per run. |
+| Staging | `nba_staging` (views) | Renaming to `snake_case`, type casting (dates, heights in cm), home/away flag. |
+| Marts | `modeling` (tables) | Star schema consumed by Power BI. |
 
-Data Engineering  
-- Python  
-- nba_api  
-- Google BigQuery  
-- Dataform  
-- Git / GitHub  
+## Data model
 
-BI & Analytics  
-- Power BI
-- Figma
-- Star schema modeling  
-- Advanced DAX (benchmarks, league averages, dynamic targets)
+```mermaid
+erDiagram
+    dim_players ||--o{ fct_gamelog : "id_player"
+    dim_teams   ||--o{ fct_gamelog : "id_team"
+    dim_teams   ||--o{ fct_teamlog : "id_team"
+    dim_games   ||--o{ fct_gamelog : "id_game"
+    dim_games   ||--o{ fct_teamlog : "id_game"
+```
 
-## Data Extraction
+| Table | Grain | Rows (2025-26) |
+|---|---|---|
+| `fct_gamelog` | player × game | 26,651 |
+| `fct_teamlog` | team × game | 2,460 |
+| `dim_games` | game | 1,230 |
+| `dim_players` | player who played in the season | 582 |
+| `dim_teams` | franchise | 30 |
 
-Data is extracted directly from the NBA Stats API, including both player-level and team-level information.
+The calendar dimension used by the report is built inside Power BI.
 
-Endpoints used  
-- LeagueGameLog  
-- PlayerGameLog  
-- LeagueGameLog (Teams)  
-- PlayerIndex  
-- Teams (Static)
+## Data quality
 
-Official player and team headshots are also downloaded and stored to enhance dashboard visuals.
+The Dataform run includes **21 assertions**, and the pipeline stops if any of them fails:
 
--source : https://github.com/swar/nba_api
+- **Uniqueness and not-null** on every key, in staging and marts.
+- **Referential integrity**: every player and team in the facts exists in the dimensions.
+- **Reconciliation between sources**: for every game, the sum of the players' points equals the team's points (player and team box scores come from different API calls).
+- **Game consistency**: exactly two teams and one winner per game.
 
-## Local Pipeline Orchestration
+The tests already caught a real edge case. Five games were played on **neutral courts**: the two NBA Cup semifinals in Las Vegas and the games in Mexico City, Berlin and London. In those games the API lists *both* teams as visitors (`@`). `dim_games` flags them with `is_neutral_site` and always fills the winner/loser columns, so no game is lost when you analyze home-court advantage.
 
-The entire pipeline is orchestrated through a centralized main() function, allowing end-to-end execution with a single command.
+## Design decisions
 
-The pipeline performs:
-- Player extraction
-- Player index extraction
-- Team extraction
-- Game list extraction
-- Player game logs extraction
-- Team game logs extraction
-- Player and team headshots download
-- Execution of all Dataform models
+- **One request instead of ~530.** Player game logs come from `LeagueGameLog` in player mode (the whole league in a single call) instead of looping `PlayerGameLog` per player. Same rows, same totals, and a full run takes about a minute.
+- **Players come from the season, not from "active today".** The static `nba_api` player list flags who is active *now*. Building `dim_players` from it drops players who played the season and retired afterwards, and leaves their games orphaned. The dimension is built from the players who appear in the game logs, enriched by `PlayerIndex` in historical mode, which covers 582 of 582 players.
+- **Traded players.** `id_team` lives in the fact (team at the time of the game). In `dim_players` it means the team of the player's last game. 72 players changed teams during 2025-26.
+- **Nothing environment-specific in the code.** The project id comes from `.env`. The Dataform credentials file is generated on each run from the same variables.
 
-This approach ensures reproducibility, easy testing, and fast iteration.
+## How to run
 
-## Data Modeling
+Prerequisites: Python 3.10+, Node.js, a Google Cloud project (the free [BigQuery Sandbox](https://cloud.google.com/bigquery/docs/sandbox) is enough) and the `gcloud` CLI.
 
-Transformations are handled using Dataform, following a layered modeling approach:
+```bash
+git clone https://github.com/RodrigoJacquesW/nba_project.git
+cd nba_project
 
-- source: raw BigQuery tables  
-- stg: cleaned and standardized data  
-- int: intermediate transformations  
-- mart: analytical fact and dimension tables  
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+npm install -g @dataform/cli@3.0.38
 
-Core analytical tables  
-- fct_player_gamelog  
-- fct_teamlog  
-- fct_games_unique  
-- dim_player  
-- dim_team  
-- dim_calendar  
+gcloud auth application-default login
+cp .env.example .env          # set GCP_PROJECT_ID
 
-The model is optimized for BI performance and analytical accuracy, avoiding common biases such as statistics limited to home games only.
+python main.py                # extract + load + Dataform models and tests
+python main.py --images       # also download missing headshots and logos
+python main.py --season 2024-25
+```
 
-## Business Intelligence
+> **BigQuery Sandbox:** tables expire after 60 days. Run `python main.py` again to rebuild them.
 
-Dashboards were built in Power BI with a strong focus on comparison, context, and performance trends.
+## Repository structure
 
-Players Dashboard  
-- Points, assists, and efficiency metrics  
-- Comparison against league averages  
-- Scatter plots with highlighted selected player  
-- Context-aware benchmarks  
+```
+├── main.py                  # entry point (CLI)
+├── src/nba_pipeline/
+│   ├── config.py            # settings from .env
+│   ├── extract.py           # NBA Stats API calls
+│   ├── load.py              # BigQuery load (raw)
+│   ├── images.py            # headshots and logos
+│   └── transform.py         # runs Dataform
+├── definitions/
+│   ├── sources/             # raw table declarations
+│   ├── staging/             # stg_* views
+│   ├── marts/               # dim_* and fct_* tables
+│   └── assertions/          # cross-table data tests
+├── workflow_settings.yaml   # Dataform config (project id comes from .env)
+├── data/headshots/          # player headshots + teamsheadshot/ (team logos), used by Power BI
+├── powerbi/nba_dashboard.pbix
+└── docs/img/
+```
 
-Teams Dashboard  
-- Win percentage and season performance  
-- Offensive and defensive metrics  
-- League average comparisons  
-- Dynamic Playoff / Play-In status gauge  
+## Dashboard
 
-BI Highlights  
-- Dynamic benchmarks  
-- Context-aware league averages  
-- Date-driven analysis using a calendar dimension  
-- Clear separation between absolute metrics and relative performance  
+Two pages, **Players** and **Teams**, each comparing the selection with the league average: points, minutes, 3-point attempts vs. makes, and a *Playoff Meter* that classifies the team (playoffs direct, play-in, out) from its win percentage.
 
-## Future Improvements
+![Teams dashboard](docs/img/dashboard_teams.jpg)
 
-This project was designed with an analytical and educational focus, but it can be easily extended into a production-grade pipeline:
+*Screenshots taken in December 2025, mid-season. The pipeline now loads the full 2025-26 regular season.*
 
-- Apache Airflow orchestration  
-- DAG-based scheduling  
-- Incremental data loads  
-- Data quality tests  
-- CI/CD for Dataform  
-- Fully managed cloud deployment  
+## Next steps
 
-These features were intentionally not implemented to avoid overengineering, while keeping the architecture ready for scalability.
+- Incremental loads by game date instead of full refresh.
+- Scheduled runs (GitHub Actions or Cloud Scheduler).
+- Playoff games (`season_type_all_star="Playoffs"`).
 
-## Repository Structure
+---
 
-extract/  
-├── get_players.py  
-├── get_gamelogs.py  
-├── get_teamlog.py  
-└── ...  
-
-dataform/  
-├── source/  
-├── stg/  
-├── int/  
-└── mart/  
-
-images/  
-├── players/  
-└── teams/  
-
-main.py  
-README.md  
-
-## Author
-
-Rodrigo Wolff  
-Data Engineering · Analytics Engineering · Business Intelligence
-
-## Final Notes
-
-This project demonstrates more than dashboard creation. It showcases solid data modeling, architectural decision-making, analytical thinking, scalability awareness, and a production-ready mindset.
-
+**Rodrigo Jacques Wolff** · Analytics Engineer · [LinkedIn](https://www.linkedin.com/in/rodrigo-jacques-wolff/)

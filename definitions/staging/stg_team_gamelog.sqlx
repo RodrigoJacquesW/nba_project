@@ -1,0 +1,43 @@
+config {
+  type: "view",
+  schema: "nba_staging",
+  description: "Team box scores, one row per team per game. Home/away comes from MATCHUP ('BOS vs. NYK' = home, 'BOS @ NYK' = away). At neutral sites both teams come as '@'.",
+  assertions: {
+    uniqueKey: ["id_team", "id_game"],
+    nonNull: ["id_team", "id_game", "game_date", "win_or_loss"],
+    rowConditions: ["win_or_loss in ('W', 'L')"]
+  }
+}
+
+select
+    cast(SEASON_ID as string)               as id_season,
+    TEAM_ID                                 as id_team,
+    TEAM_ABBREVIATION                       as team_abbreviation,
+    TEAM_NAME                               as team_name,
+    cast(GAME_ID as string)                 as id_game,
+    cast(GAME_DATE as date)                 as game_date,
+    MATCHUP                                 as matchup,
+    MATCHUP like '%vs.%'                    as is_home,
+    right(MATCHUP, 3)                       as opponent_abbreviation,
+    WL                                      as win_or_loss,
+    MIN                                     as minutes,
+    FGM                                     as field_goals_made,
+    FGA                                     as field_goals_tried,
+    FG_PCT                                  as field_goal_percentage,
+    FG3M                                    as three_point_made,
+    FG3A                                    as three_point_tried,
+    FG3_PCT                                 as three_point_percentage,
+    FTM                                     as free_throws_made,
+    FTA                                     as free_throws_tried,
+    FT_PCT                                  as free_throws_percentage,
+    OREB                                    as offensive_rebounds,
+    DREB                                    as defensive_rebounds,
+    REB                                     as total_rebounds,
+    AST                                     as assist,
+    STL                                     as steals,
+    BLK                                     as blocks,
+    TOV                                     as turnovers,
+    PF                                      as personal_fouls,
+    PTS                                     as points,
+    PLUS_MINUS                              as plus_minus
+from ${ref("team_gamelog")}

@@ -1,9 +1,19 @@
 config {
-  type: "table",  
-  schema: "modeling",
-  name: "stg_teams"
+  type: "view",
+  schema: "nba_staging",
+  description: "NBA franchises.",
+  assertions: {
+    uniqueKey: ["id_team"],
+    nonNull: ["id_team", "abbreviation"]
+  }
 }
 
 select
-    *
+    id              as id_team,
+    full_name,
+    abbreviation,
+    nickname        as team_name,
+    city,
+    state           as team_state,
+    year_founded
 from ${ref("teams")}

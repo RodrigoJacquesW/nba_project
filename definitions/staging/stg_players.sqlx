@@ -1,9 +1,0 @@
-config {
-  type: "table",  
-  schema: "modeling",
-  name: "stg_players"
-}
-
-select
-    *
-from ${ref("players")}

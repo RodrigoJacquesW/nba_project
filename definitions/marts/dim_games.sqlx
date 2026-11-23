@@ -1,0 +1,30 @@
+config {
+  type: "table",
+  schema: "modeling",
+  description: "One row per game, with final score and winner. Neutral-site games (NBA Cup in Las Vegas, international games) list both teams as visitors ('@') in the API, so they have no home/away team: use the winner/loser columns, which are always filled.",
+  assertions: {
+    uniqueKey: ["id_game"],
+    nonNull: ["id_game", "game_date", "id_winner_team", "id_loser_team", "winner_points", "loser_points"],
+    rowConditions: [
+      "id_winner_team != id_loser_team",
+      "winner_points > loser_points",
+      "is_neutral_site or (id_home_team is not null and id_away_team is not null)"
+    ]
+  }
+}
+
+select
+    id_game,
+    any_value(id_season)                            as id_season,
+    min(game_date)                                  as game_date,
+    countif(is_home) = 0                            as is_neutral_site,
+    max(if(is_home, id_team, null))                 as id_home_team,
+    if(countif(is_home) = 0, null, max(if(is_home, null, id_team)))  as id_away_team,
+    max(if(is_home, points, null))                  as home_points,
+    if(countif(is_home) = 0, null, max(if(is_home, null, points)))   as away_points,
+    max(if(win_or_loss = 'W', id_team, null))       as id_winner_team,
+    max(if(win_or_loss = 'L', id_team, null))       as id_loser_team,
+    max(if(win_or_loss = 'W', points, null))        as winner_points,
+    max(if(win_or_loss = 'L', points, null))        as loser_points
+from ${ref("stg_team_gamelog")}
+group by id_game

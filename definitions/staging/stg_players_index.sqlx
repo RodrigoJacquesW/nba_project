@@ -1,0 +1,30 @@
+config {
+  type: "view",
+  schema: "nba_staging",
+  description: "Player attributes. Height arrives as feet-inches text ('6-11') and is also converted to centimeters.",
+  assertions: {
+    uniqueKey: ["id_player"],
+    nonNull: ["id_player"]
+  }
+}
+
+select
+    PERSON_ID                                               as id_player,
+    PLAYER_FIRST_NAME                                       as first_name,
+    PLAYER_LAST_NAME                                        as last_name,
+    trim(concat(ifnull(PLAYER_FIRST_NAME, ''), ' ', ifnull(PLAYER_LAST_NAME, ''))) as full_name,
+    nullif(POSITION, '')                                    as position,
+    nullif(HEIGHT, '')                                      as height,
+    round(
+        safe_cast(split(HEIGHT, '-')[safe_offset(0)] as int64) * 30.48
+      + safe_cast(split(HEIGHT, '-')[safe_offset(1)] as int64) * 2.54
+    , 1)                                                    as height_cm,
+    safe_cast(WEIGHT as int64)                              as weight,
+    nullif(COLLEGE, '')                                     as college,
+    nullif(COUNTRY, '')                                     as country,
+    safe_cast(DRAFT_YEAR as int64)                          as draft_year,
+    safe_cast(DRAFT_ROUND as int64)                         as draft_round,
+    safe_cast(DRAFT_NUMBER as int64)                        as draft_number,
+    safe_cast(FROM_YEAR as int64)                           as from_year,
+    safe_cast(TO_YEAR as int64)                             as to_year
+from ${ref("players_index")}

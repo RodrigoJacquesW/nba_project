@@ -1,0 +1,23 @@
+config {
+  type: "assertion",
+  description: "Referential integrity: every player and team in the facts must exist in the dimensions."
+}
+
+select 'fct_gamelog.id_player' as broken_key, cast(f.id_player as string) as value
+from ${ref("fct_gamelog")} as f
+left join ${ref("dim_players")} as d using (id_player)
+where d.id_player is null
+
+union all
+
+select 'fct_gamelog.id_team', cast(f.id_team as string)
+from ${ref("fct_gamelog")} as f
+left join ${ref("dim_teams")} as d using (id_team)
+where d.id_team is null
+
+union all
+
+select 'fct_teamlog.id_team', cast(f.id_team as string)
+from ${ref("fct_teamlog")} as f
+left join ${ref("dim_teams")} as d using (id_team)
+where d.id_team is null

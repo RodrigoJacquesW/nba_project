@@ -1,0 +1,19 @@
+config {
+  type: "table",
+  schema: "modeling",
+  description: "One row per NBA franchise.",
+  assertions: {
+    uniqueKey: ["id_team"],
+    nonNull: ["id_team", "full_name", "abbreviation"]
+  }
+}
+
+select
+    id_team,
+    full_name,
+    abbreviation,
+    team_name,
+    city,
+    team_state,
+    year_founded
+from ${ref("stg_teams")}

@@ -1,0 +1,42 @@
+config {
+  type: "table",
+  schema: "modeling",
+  description: "Fact: team box score. Grain = team x game (two rows per game).",
+  assertions: {
+    uniqueKey: ["id_team", "id_game"],
+    nonNull: ["id_team", "id_game", "game_date", "win_or_loss"]
+  }
+}
+
+select
+    id_season,
+    id_team,
+    team_abbreviation,
+    team_name,
+    id_game,
+    game_date,
+    matchup,
+    is_home,
+    opponent_abbreviation,
+    win_or_loss,
+    minutes                     as team_minutes,
+    field_goals_made,
+    field_goals_tried,
+    field_goal_percentage,
+    three_point_made,
+    three_point_tried,
+    three_point_percentage,
+    free_throws_made,
+    free_throws_tried,
+    free_throws_percentage,
+    offensive_rebounds,
+    defensive_rebounds,
+    total_rebounds,
+    assist,
+    steals,
+    blocks,
+    turnovers,
+    personal_fouls,
+    points,
+    plus_minus
+from ${ref("stg_team_gamelog")}
